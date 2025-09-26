@@ -22,7 +22,7 @@
 		<div id="message"></div>
 	</div>
 	<script>
-		const API_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbyculA5vt0be5gjBdL7aOYMHrximrXzrB2Q4cn3NW_acCh_nT9iZgjyOIbqXGz3EhFQ/exec';
+	const API_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbwVJnIuB3SN9BsE4aOjUHmwXyOXFODBHgEh32_HKK7Fs-QNiJ7g8REWB-IsebEbL537/exec';
 
 		async function fetchReceipt() {
 			const res = await fetch(API_URL);
@@ -30,15 +30,14 @@
 			document.getElementById('receipt').textContent = data.nextReceipt;
 		}
 
+
 		document.getElementById('claimForm').addEventListener('submit', async function(e) {
 			e.preventDefault();
 			const initials = document.getElementById('initials').value.trim();
 			if (!initials) return;
-			const res = await fetch(API_URL, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ initials })
-			});
+			// Use GET request for claim
+			const claimUrl = API_URL + '&action=claim&initials=' + encodeURIComponent(initials);
+			const res = await fetch(claimUrl);
 			const data = await res.json();
 			if (data.success) {
 				document.getElementById('receipt').textContent = data.receipt + 1;
