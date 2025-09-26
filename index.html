@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    .container { max-width: 400px; margin: auto; padding: 2em; border: 1px solid #ccc; border-radius: 8px; }
+    label, input, button { display: block; width: 100%; margin-bottom: 1em; }
+    #receipt { font-size: 2em; text-align: center; margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Receipt Tracker</h2>
+    <div id="receipt">Loading...</div>
+    <form id="claimForm">
+      <label for="initials">Your Initials:</label>
+      <input type="text" id="initials" maxlength="5" required />
+      <button type="submit">Claim Receipt</button>
+    </form>
+    <div id="message"></div>
+  </div>
+  <script>
+    async function fetchReceipt() {
+      const res = await fetch('/api/receipt');
+      const data = await res.json();
+      document.getElementById('receipt').textContent = data.current;
+    }
+    document.getElementById('claimForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const initials = document.getElementById('initials').value.trim();
+      if (!initials) return;
+      const res = await fetch('/api/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initials })
+      });
+      const data = await res.json();
+      if (data.next) {
+        document.getElementById('receipt').textContent = data.next;
+        document.getElementById('message').textContent = `Receipt claimed! Next: ${data.next}`;
+      } else if (data.error) {
+        document.getElementById('message').textContent = data.error;
+      }
+      document.getElementById('initials').value = '';
+    });
+    fetchReceipt();
+  </script>
+</body>
+</html>
