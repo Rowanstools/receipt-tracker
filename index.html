@@ -25,8 +25,8 @@
 
 	const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVJnIuB3SN9BsE4aOjUHmwXyOXFODBHgEh32_HKK7Fs-QNiJ7g8REWB-IsebEbL537/exec';
 	function getProxyUrl(url) {
-		return 'http://localhost:8080/proxy?url=' + encodeURIComponent(url);
-	}
+  return 'https://receipt-proxy-sjwu.onrender.com' + encodeURIComponent(url);
+}
 
 
 		async function fetchReceipt() {
