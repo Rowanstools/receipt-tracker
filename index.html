@@ -22,22 +22,28 @@
 		<div id="message"></div>
 	</div>
 	<script>
-	const API_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbwVJnIuB3SN9BsE4aOjUHmwXyOXFODBHgEh32_HKK7Fs-QNiJ7g8REWB-IsebEbL537/exec';
+
+	const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVJnIuB3SN9BsE4aOjUHmwXyOXFODBHgEh32_HKK7Fs-QNiJ7g8REWB-IsebEbL537/exec';
+	function getProxyUrl(url) {
+		return 'http://localhost:8080/proxy?url=' + encodeURIComponent(url);
+	}
+
 
 		async function fetchReceipt() {
-			const res = await fetch(API_URL);
+			const res = await fetch(getProxyUrl(SCRIPT_URL));
 			const data = await res.json();
 			document.getElementById('receipt').textContent = data.nextReceipt;
 		}
+
 
 
 		document.getElementById('claimForm').addEventListener('submit', async function(e) {
 			e.preventDefault();
 			const initials = document.getElementById('initials').value.trim();
 			if (!initials) return;
-			// Use GET request for claim
-			const claimUrl = API_URL + '&action=claim&initials=' + encodeURIComponent(initials);
-			const res = await fetch(claimUrl);
+			// Use GET request for claim, build the real URL first
+			const claimUrl = SCRIPT_URL + '?action=claim&initials=' + encodeURIComponent(initials);
+			const res = await fetch(getProxyUrl(claimUrl));
 			const data = await res.json();
 			if (data.success) {
 				document.getElementById('receipt').textContent = data.receipt + 1;
