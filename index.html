@@ -21,40 +21,60 @@
 		</form>
 		<div id="message"></div>
 	</div>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script>
+  // Replace with your actual Supabase project URL and anon key
+  const SUPABASE_URL = 'https://adlnjerrxdunlskyncgo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbG5qZXJyeGR1bmxza3luY2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjU1MjMsImV4cCI6MjA3NDkwMTUyM30.Qps_-Q1oXhZnsAksR-JJBvXTlM_NgV_erp3GYsUsGj8';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-	const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVJnIuB3SN9BsE4aOjUHmwXyOXFODBHgEh32_HKK7Fs-QNiJ7g8REWB-IsebEbL537/exec';
-	function getProxyUrl(url) {
-  return 'https://receipt-proxy-sjwu.onrender.com/proxy?url=' + encodeURIComponent(url);
-}
+  async function fetchReceipt() {
+    // Get the highest receipt_number
+    const { data, error } = await supabase
+      .from('receipts')
+      .select('receipt_number')
+      .order('receipt_number', { ascending: false })
+      .limit(1);
 
+    let nextReceipt = 300000;
+    if (data && data.length > 0) {
+      nextReceipt = data[0].receipt_number + 1;
+    }
+    document.getElementById('receipt').textContent = nextReceipt;
+  }
 
-		async function fetchReceipt() {
-			const res = await fetch(getProxyUrl(SCRIPT_URL));
-			const data = await res.json();
-			document.getElementById('receipt').textContent = data.nextReceipt;
-		}
+  document.getElementById('claimForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const initials = document.getElementById('initials').value.trim();
+    if (!initials) return;
 
+    // Get the next receipt number
+    const { data, error: fetchError } = await supabase
+      .from('receipts')
+      .select('receipt_number')
+      .order('receipt_number', { ascending: false })
+      .limit(1);
 
+    let nextReceipt = 300000;
+    if (data && data.length > 0) {
+      nextReceipt = data[0].receipt_number + 1;
+    }
 
-		document.getElementById('claimForm').addEventListener('submit', async function(e) {
-			e.preventDefault();
-			const initials = document.getElementById('initials').value.trim();
-			if (!initials) return;
-			// Use GET request for claim, build the real URL first
-			const claimUrl = SCRIPT_URL + '?action=claim&initials=' + encodeURIComponent(initials);
-			const res = await fetch(getProxyUrl(claimUrl));
-			const data = await res.json();
-			if (data.success) {
-				document.getElementById('receipt').textContent = data.receipt + 1;
-				document.getElementById('message').textContent = `Receipt ${data.receipt} claimed!`;
-			} else {
-				document.getElementById('message').textContent = 'Error claiming receipt.';
-			}
-			document.getElementById('initials').value = '';
-		});
+    // Insert the new receipt
+    const { error: insertError } = await supabase
+      .from('receipts')
+      .insert([{ receipt_number: nextReceipt, initials }]);
 
-		fetchReceipt();
-	</script>
+    if (!insertError) {
+      document.getElementById('receipt').textContent = nextReceipt + 1;
+      document.getElementById('message').textContent = `Receipt ${nextReceipt} claimed!`;
+    } else {
+      document.getElementById('message').textContent = 'Error claiming receipt.';
+    }
+    document.getElementById('initials').value = '';
+  });
+
+  fetchReceipt();
+</script>
 </body>
 </html>
