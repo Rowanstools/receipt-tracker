@@ -23,13 +23,11 @@
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script>
-  // Replace with your actual Supabase project URL and anon key
   const SUPABASE_URL = 'https://adlnjerrxdunlskyncgo.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbG5qZXJyeGR1bmxza3luY2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjU1MjMsImV4cCI6MjA3NDkwMTUyM30.Qps_-Q1oXhZnsAksR-JJBvXTlM_NgV_erp3GYsUsGj8';
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   async function fetchReceipt() {
-    // Get the highest receipt_number
     const { data, error } = await supabase
       .from('receipts')
       .select('receipt_number')
@@ -49,7 +47,7 @@
     if (!initials) return;
 
     // Get the next receipt number
-    const { data, error: fetchError } = await supabase
+    const { data } = await supabase
       .from('receipts')
       .select('receipt_number')
       .order('receipt_number', { ascending: false })
@@ -66,13 +64,25 @@
       .insert([{ receipt_number: nextReceipt, initials }]);
 
     if (!insertError) {
-      document.getElementById('receipt').textContent = nextReceipt + 1;
       document.getElementById('message').textContent = `Receipt ${nextReceipt} claimed!`;
     } else {
       document.getElementById('message').textContent = 'Error claiming receipt.';
     }
     document.getElementById('initials').value = '';
+    // No need to call fetchReceipt() here; real-time will update it!
   });
+
+  // Real-time subscription for new receipts
+  supabase
+    .channel('public:receipts')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'receipts' },
+      () => {
+        fetchReceipt();
+      }
+    )
+    .subscribe();
 
   fetchReceipt();
 </script>
