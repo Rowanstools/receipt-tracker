@@ -65,15 +65,15 @@
 
     if (!insertError) {
       document.getElementById('message').textContent = `Receipt ${nextReceipt} claimed!`;
+      fetchReceipt(); // Update immediately for this user
     } else {
       document.getElementById('message').textContent = 'Error claiming receipt.';
     }
     document.getElementById('initials').value = '';
-    // No need to call fetchReceipt() here; real-time will update it!
   });
 
-  // Real-time subscription for new receipts
-  supabase
+  // Real-time subscription for new receipts (Supabase v2: use .subscribe() and .on())
+  const channel = supabase
     .channel('public:receipts')
     .on(
       'postgres_changes',
